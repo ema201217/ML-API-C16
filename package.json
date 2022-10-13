@@ -5,6 +5,7 @@
   "scripts": {
     "start": "node ./src/bin/www",
     "dev": "nodemon ./src/bin/www",
+    "create:db": "sequelize db:create && sequelize db:migrate && sequelize db:seed:all",
     "reset:db": "sequelize db:drop && sequelize db:create && sequelize db:migrate && sequelize db:seed:all",
     "dev:reset":"npm run reset:db && nodemon ./src/bin/www"
   },
