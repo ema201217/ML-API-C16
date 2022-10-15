@@ -1,7 +1,8 @@
 const { ROL_USER } = require("../constants");
 const db = require("../database/models");
 const { sign } = require("jsonwebtoken");
-const { hash } = require("bcryptjs");
+const { hash, compare } = require("bcryptjs");
+const { literal } = require("sequelize");
 module.exports = {
   /* REGISTER CONTROLLER */
   register: async (req, res) => {
@@ -9,7 +10,7 @@ module.exports = {
 
     try {
       if (!email || !password) {
-        res.status(401).json({
+        return res.status(401).json({
           ok: false,
           status: 401,
         });
@@ -35,7 +36,7 @@ module.exports = {
         active: true,
       });
 
-      const token = await sign({ id, rolId }, process.env.SECRET_KEY_JWT, {
+      const token = sign({ id, rolId }, process.env.SECRET_KEY_JWT, {
         expiresIn: "4h",
       });
 
@@ -66,13 +67,23 @@ module.exports = {
         });
       }
 
-      const { id = null, rolId } = await db.User.findOne({ where: { email } });
+      const { id = null, rolId, password: passwordHash } = await db.User.findOne({ where: { email } });
 
       if (!id) {
         return res.status(404).json({
           ok: false,
           status: 404,
           msg: "No existe ningún usuario con ese email",
+        });
+      }
+
+      const isPassValid = await compare(password,passwordHash)
+
+      if(!isPassValid){
+        return res.status(401).json({
+          ok: false,
+          status: 401,
+          msg: "Credenciales invalidas",
         });
       }
 
@@ -98,7 +109,36 @@ module.exports = {
   },
 
   /* GET USER AUTHENTICATED */
-  getUserAuthenticated: (req, res) => {
-    
+  getUserAuthenticated: async (req, res) => {
+    try {
+      const options = {
+        include:[{
+          association:'addresses',
+          attributes: {
+            exclude:['userId','deletedAt']
+          }
+        }],
+        attributes: {
+          exclude:['deletedAt','password'],
+          include: [[literal(`CONCAT( '${req.protocol}://${req.get("host")}/users/image/',avatar )`),'avatar']]
+        }
+      }
+      const {id} = req.userToken /* { id:1 ,rolId:2 } */
+      const data = await db.User.findByPk(id,options)
+
+      res.status(200).json({
+        ok:true,
+        status:200,
+        data
+      })
+    } catch (error) {
+      res.status(500).json({
+        ok:false,
+        status:500,
+        msg: error.message || "Error en el servidor" 
+      })
+
+    }
+
   },
 };

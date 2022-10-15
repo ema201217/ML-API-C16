@@ -3,10 +3,11 @@ const express = require("express");
 const router = express.Router();
 
 // ************ Middleware Require ************
-const { uploadImageAvatar } = require("../middlewares");
+const { uploadImageAvatar, checkToken } = require("../middlewares");
 
 // ************ Controller Require ************
 const { register, login, getUserAuthenticated } = require("../controllers/authController");
+
 
 router
   /* POST REGISTER */
@@ -16,6 +17,6 @@ router
   .post("/login", login)
 
   /* POST LOGIN */
-  .get("/me/:token?", getUserAuthenticated);
+  .get("/me/:token?", checkToken, getUserAuthenticated);
 
 module.exports = router;

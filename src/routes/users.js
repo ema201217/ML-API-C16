@@ -4,10 +4,11 @@ const router = express.Router();
 
 // ************ Controller Require ************
 const { update, remove, image } = require("../controllers/usersController");
+const { checkToken } = require("../middlewares");
 
 router
   /* UPDATE USER */
-  .patch("/", update)
+  .patch("/", checkToken, update)
 
   /* DELETE USER */
   .delete("/:id?",remove)
