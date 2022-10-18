@@ -1,6 +1,9 @@
 "use strict";
+const { hashSync } = require("bcryptjs");
 const { Model } = require("sequelize");
 const { ROL_USER, IMG_DEFAULT } = require("../../constants");
+const {unlinkSync} = require('fs')
+const {join} = require('path')
 
 const {
   objectValidate,
@@ -12,7 +15,7 @@ module.exports = (sequelize, DataTypes) => {
     existEmail(value) {
       return new Promise((resolve) => {
         const user = User.findOne({ where: { email: value } });
-        resolve(user);
+          resolve(user);
       });
     }
 
@@ -37,7 +40,9 @@ module.exports = (sequelize, DataTypes) => {
       /* NAME */
       name: {
         type: DataTypes.STRING,
+        /* allowNull: false, */
         validate: {
+          /* ...defaultValidationsRequiredFields, */
           is: objectValidate(/^[a-z]+$/i, "No puede tener números (name)"),
         },
       },
@@ -57,15 +62,15 @@ module.exports = (sequelize, DataTypes) => {
         unique: true,
         validate: {
           ...defaultValidationsRequiredFields,
-
           isEmail: objectValidate(true, "Ingrese un email valido"),
 
+          /* CUSTOM VALIDATOR -> SEQUELIZE */
           async email(value) {
             /* email@email.com */
             const exist = await this.existEmail(value);
-            if (exist) {
-              throw new Error("El email ya existe");
-            }
+              if (exist) {
+                throw new Error("El email ya existe");
+              }
           },
         },
       },
@@ -77,17 +82,35 @@ module.exports = (sequelize, DataTypes) => {
         validate: {
           ...defaultValidationsRequiredFields,
 
-          isAlphanumeric: objectValidate(
-            true,
-            "Contraseña invalida, solo números y letras"
-          ),
+          // isAlphanumeric: objectValidate(
+          //   true,
+          //   "Contraseña invalida, solo números y letras"
+          // ),
+          // len: objectValidate([10,30],"Longitud invalida, (mas de 10 y menos de 30)"),
+           is:objectValidate(/^(?=\w*\d)(?=\w*[A-Z])(?=\w*[a-z])\S{8,16}$/,"La contraseña debe tener entre 8 y 16 caracteres, al menos un dígito, al menos una minúscula y al menos una mayúscula"),
+          /* CUSTOM */
+          hashPass(value){
+            User.beforeCreate((user) => {
+              user.password = hashSync(value)
+            })
+          } 
+
         },
       },
 
       // AVATAR
       avatar: {
         type: DataTypes.STRING,
-        defaultValue: IMG_DEFAULT,
+        /* defaultValue: IMG_DEFAULT, */
+        validate: {
+          isImage(value){
+            console.log(value);
+            if(!/.png|.jpg|.jpeg|.webp/i.test(value)){ /* value = avatar-2138129351.png */
+              unlinkSync(join(__dirname,`../../../public/images/avatars/${value}`)) 
+              throw new Error("Archivo invalido")
+            }
+          }
+        }
       },
 
       // ROL ID
@@ -100,6 +123,13 @@ module.exports = (sequelize, DataTypes) => {
       sequelize,
       modelName: "User",
       paranoid: true,
+      validate: {
+        nameAndSurname(){
+          if(this.name === this.surname){
+            throw new Error('El nombre y apellido no pueden ser iguales')
+          }
+        }
+      }
     }
   );
 

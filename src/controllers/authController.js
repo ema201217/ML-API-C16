@@ -3,6 +3,7 @@ const db = require("../database/models");
 const { sign } = require("jsonwebtoken");
 const { hash, compare } = require("bcryptjs");
 const { literal } = require("sequelize");
+const { sendJsonError } = require("../helpers/sendJsonError");
 module.exports = {
   /* REGISTER CONTROLLER */
   register: async (req, res) => {
@@ -15,18 +16,25 @@ module.exports = {
           status: 401,
         });
       } */
-
+     
       const { id, rolId } = await db.User.create({
         name: name?.trim(),
         surname: surname?.trim(),
         email: email?.trim(),
-        password: password?.trim(),
+        password: password?.trim(),  /* 123123 */ /* sdfasdgiuasgduiasd9asgdosadga$ */
         street: street?.trim(),
         city: city?.trim(),
         province: province?.trim(),
         avatar: req.file?.filename || "default.png",
         rolId: ROL_USER,
       }); 
+
+      /* 
+        errors : {
+          name : "campo requerido",
+          surname : "campo requerido"
+        }
+      */
 
       /* throw new Error('error en el catch') */
 
@@ -48,11 +56,13 @@ module.exports = {
         token,
       });
     } catch (error) {
-      res.status(500).json({
+      
+      sendJsonError(error, res)
+     /*  res.status(500).json({
         ok: false,
         status: 500,
-        msg: error.message,
-      });
+        msg: error,
+      }); */
     }
   },
 
@@ -62,31 +72,36 @@ module.exports = {
       const { email, password } = req.body;
 
       if (!email || !password) {
-       return res.status(401).json({
+        return sendJsonError("El email y password son requeridos",res,401)
+       /* return res.status(401).json({
           ok: false,
           status: 401,
           msg: "El email y password son requeridos",
-        });
+        }); */
       }
 
-      const { id = null, rolId, password: passwordHash } = await db.User.findOne({ where: { email } });
+      const user = await db.User.findOne({ where: { email } });
 
-      if (!id) {
-        return res.status(404).json({
+      const { id, rolId, password: passwordHash } = user || { id:null, rolId:null,password:null }
+
+      if (!user) {
+        return sendJsonError("No existe ningún usuario con ese email",res,404)
+       /*  return res.status(404).json({
           ok: false,
           status: 404,
           msg: "No existe ningún usuario con ese email",
-        });
+        }); */
       }
 
       const isPassValid = await compare(password,passwordHash)
 
       if(!isPassValid){
-        return res.status(401).json({
+        return sendJsonError("Credenciales invalidas",res)
+        /* return res.status(401).json({
           ok: false,
           status: 401,
           msg: "Credenciales invalidas",
-        });
+        }); */
       }
 
       const token = await sign({ id, rolId }, process.env.SECRET_KEY_JWT, {
@@ -101,12 +116,12 @@ module.exports = {
       });
 
     } catch (error) {
-
-      res.status(404).json({
+      sendJsonError(error,res)
+     /*  res.status(500).json({
         ok: false,
         status: 500,
         msg: error.message,
-      });
+      }); */
     }
   },
 
@@ -134,11 +149,12 @@ module.exports = {
         data
       })
     } catch (error) {
-      res.status(500).json({
+      sendJsonError(error,res)
+   /*    res.status(500).json({
         ok:false,
         status:500,
         msg: error.message || "Error en el servidor" 
-      })
+      }) */
 
     }
 
