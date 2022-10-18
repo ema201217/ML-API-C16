@@ -4,14 +4,15 @@ const router = express.Router();
 
 // ************ Controller Require ************
 const { update, remove, image } = require("../controllers/usersController");
-const { checkToken } = require("../middlewares");
+const { checkToken, adminNotAutoDestroy } = require("../middlewares");
+
 
 router
   /* UPDATE USER */
   .patch("/", checkToken, update)
 
   /* DELETE USER */
-  .delete("/:id?",remove)
+  .delete("/:id?", checkToken, adminNotAutoDestroy, remove)
 
   /* PREVIEW IMAGE */
   .get("/image/:img", image);

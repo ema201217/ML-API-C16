@@ -9,24 +9,26 @@ module.exports = {
     const { name, surname, email, password, street, city, province } = req.body;
 
     try {
-      if (!email || !password) {
+     /*  if (!email || !password) {
         return res.status(401).json({
           ok: false,
           status: 401,
         });
-      }
+      } */
 
       const { id, rolId } = await db.User.create({
         name: name?.trim(),
         surname: surname?.trim(),
         email: email?.trim(),
-        password: await hash(password?.trim(), 12),
+        password: password?.trim(),
         street: street?.trim(),
         city: city?.trim(),
         province: province?.trim(),
         avatar: req.file?.filename || "default.png",
         rolId: ROL_USER,
-      });
+      }); 
+
+      /* throw new Error('error en el catch') */
 
       await db.Address.create({
         street: name?.trim(),
@@ -49,7 +51,7 @@ module.exports = {
       res.status(500).json({
         ok: false,
         status: 500,
-        msg: "Error en el servidor",
+        msg: error.message,
       });
     }
   },

@@ -1,10 +1,20 @@
 "use strict";
 const { Model } = require("sequelize");
-const { ROL_USER } = require("../../constants");
+const { ROL_USER, IMG_DEFAULT } = require("../../constants");
 
+const {
+  objectValidate,
+  defaultValidationsRequiredFields,
+} = require("../resource");
 
 module.exports = (sequelize, DataTypes) => {
   class User extends Model {
+    existEmail(value) {
+      return new Promise((resolve) => {
+        const user = User.findOne({ where: { email: value } });
+        resolve(user);
+      });
+    }
 
     static associate(models) {
       // define association here
@@ -27,11 +37,17 @@ module.exports = (sequelize, DataTypes) => {
       /* NAME */
       name: {
         type: DataTypes.STRING,
+        validate: {
+          is: objectValidate(/^[a-z]+$/i, "No puede tener números (name)"),
+        },
       },
 
       // SURNAME
       surname: {
         type: DataTypes.STRING,
+        validate: {
+          is: objectValidate(/^[a-z]+$/i, "No puede tener números (surname)"),
+        },
       },
 
       // EMAIL
@@ -39,18 +55,39 @@ module.exports = (sequelize, DataTypes) => {
         type: DataTypes.STRING,
         allowNull: false,
         unique: true,
+        validate: {
+          ...defaultValidationsRequiredFields,
+
+          isEmail: objectValidate(true, "Ingrese un email valido"),
+
+          async email(value) {
+            /* email@email.com */
+            const exist = await this.existEmail(value);
+            if (exist) {
+              throw new Error("El email ya existe");
+            }
+          },
+        },
       },
 
       // PASSWORD
       password: {
         type: DataTypes.STRING,
         allowNull: false,
+        validate: {
+          ...defaultValidationsRequiredFields,
+
+          isAlphanumeric: objectValidate(
+            true,
+            "Contraseña invalida, solo números y letras"
+          ),
+        },
       },
 
       // AVATAR
       avatar: {
         type: DataTypes.STRING,
-        defaultValue: "default.png",
+        defaultValue: IMG_DEFAULT,
       },
 
       // ROL ID
