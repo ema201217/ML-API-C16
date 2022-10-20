@@ -104,7 +104,6 @@ module.exports = (sequelize, DataTypes) => {
         /* defaultValue: IMG_DEFAULT, */
         validate: {
           isImage(value){
-            console.log(value);
             if(!/.png|.jpg|.jpeg|.webp/i.test(value)){ /* value = avatar-2138129351.png */
               unlinkSync(join(__dirname,`../../../public/images/avatars/${value}`)) 
               throw new Error("Archivo invalido")

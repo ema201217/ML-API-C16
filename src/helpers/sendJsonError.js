@@ -28,18 +28,11 @@ const sendJsonError = (
     responseError = mapped(err.errors);
   }
 
-  /* if(err instanceof Object){
+  else if (err.message) {
+    responseError = err.message;
+  }
 
-  } */
-  /*  if(typeof err === 'object'){
-  
-} */
-
-if (err.message) {
-  responseError = err.message;
-}
-
-  if (typeof err === "string") {
+  else if (typeof err === "string") {
     responseError = err;
   }
 

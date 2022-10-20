@@ -5,4 +5,4 @@ const defaultValidationsRequiredFields = {
   notEmpty: objectValidate(true,"Campo requerido"),
 }
 
-module.exports = { objectValidate,defaultValidationsRequiredFields }
+module.exports = { objectValidate, defaultValidationsRequiredFields }

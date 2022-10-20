@@ -6,7 +6,7 @@ module.exports = (sequelize, DataTypes) => {
 
     static associate(models) {
       this.hasMany(models.Image, {
-        as: "images",
+        as: "images",    /* product.images */
         foreignKey: "productId",
         onDelete: "CASCADE",
       });

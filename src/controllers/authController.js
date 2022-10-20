@@ -1,9 +1,10 @@
 const { ROL_USER } = require("../constants");
 const db = require("../database/models");
 const { sign } = require("jsonwebtoken");
-const { hash, compare } = require("bcryptjs");
+const { compare } = require("bcryptjs");
 const { literal } = require("sequelize");
 const { sendJsonError } = require("../helpers/sendJsonError");
+
 module.exports = {
   /* REGISTER CONTROLLER */
   register: async (req, res) => {
@@ -27,7 +28,7 @@ module.exports = {
         province: province?.trim(),
         avatar: req.file?.filename || "default.png",
         rolId: ROL_USER,
-      }); 
+      });
 
       /* 
         errors : {
@@ -56,7 +57,6 @@ module.exports = {
         token,
       });
     } catch (error) {
-      
       sendJsonError(error, res)
      /*  res.status(500).json({
         ok: false,
