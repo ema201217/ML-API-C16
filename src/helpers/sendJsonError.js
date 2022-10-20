@@ -12,7 +12,7 @@ const mapped = (errors = []) =>
 } */
 
 const sendJsonError = (
-  err /* credenciales incalidas */,
+  err /* credenciales invalidas */,
   res,
   codeStatus = /sequelize/i.test(err.name) ? 422 : 500 /* 404 */
 ) => {
@@ -21,9 +21,7 @@ const sendJsonError = (
   let prop = "error";
   let responseError;
 
-  if (err.message) {
-    responseError = err.message;
-  }
+  
 
   if (/sequelize/i.test(err.name) && Array.isArray(err.errors)) {
     prop += "s";
@@ -37,6 +35,9 @@ const sendJsonError = (
   
 } */
 
+if (err.message) {
+  responseError = err.message;
+}
 
   if (typeof err === "string") {
     responseError = err;
