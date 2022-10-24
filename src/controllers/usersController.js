@@ -1,6 +1,7 @@
 const path = require("path");
 const { literal } = require("sequelize");
 const db = require("../database/models");
+const { literalQueryUrlImage } = require("../helpers/literalQueryUrlImage");
 
 module.exports = {
   // API -> GET IMAGE IN VIEW
@@ -25,16 +26,7 @@ module.exports = {
         ],
         attributes: {
           exclude: ["deletedAt", "password"],
-          include: [
-            [
-              literal(
-                `CONCAT( '${req.protocol}://${req.get(
-                  "host"
-                )}/users/image/',avatar )`
-              ),
-              "avatar",
-            ],
-          ],
+          include: [ literalQueryUrlImage(req, "avatar", "avatar", "/users")],
         },
       };
       const user = await db.User.findByPk(id, options);

@@ -14,18 +14,26 @@ const mapped = (errors = []) =>
 const sendJsonError = (
   err /* credenciales invalidas */,
   res,
-  codeStatus = /sequelize/i.test(err.name) ? 422 : 500 /* 404 */
+  codeStatus = /[sequelize|AggregateError]/i.test(err.name) ? 422 : 500 /* 404 */
 ) => {
-  /* console.log(err); */
+  /* console.log(err.errors[0]);  */
+
+  // return res.send(err.errors[0].errors.errors)
 
   let prop = "error";
   let responseError;
-
+  let errorsArray;
   
 
-  if (/sequelize/i.test(err.name) && Array.isArray(err.errors)) {
+  if (/[sequelize|AggregateError]/i.test(err.name)) {
+    errorsArray = err.errors
+
+    if(/AggregateError/i.test(err.name)){
+      errorsArray = err.errors[0].errors.errors
+    } 
+
     prop += "s";
-    responseError = mapped(err.errors);
+    responseError = mapped(errorsArray);
   }
 
   else if (err.message) {

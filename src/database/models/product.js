@@ -1,5 +1,6 @@
 "use strict";
 const { Model } = require("sequelize");
+const { defaultValidationsRequiredFields, objectValidate } = require("../resource");
 
 module.exports = (sequelize, DataTypes) => {
   class Product extends Model {
@@ -24,29 +25,48 @@ module.exports = (sequelize, DataTypes) => {
       name: {
         type: DataTypes.STRING,
         allowNull: false,
+        validate:{
+          ...defaultValidationsRequiredFields
+        }
       },
 
       /* PRICE */
       price: {
         type: DataTypes.INTEGER,
         allowNull: false,
+        validate:{
+          ...defaultValidationsRequiredFields,
+          isInt:objectValidate(true,"Valor invalido")
+        }
       },
 
       /* DISCOUNT */
       discount: {
         type: DataTypes.INTEGER,
+        validate: {
+          // is:objectValidate(/[0-9]/g,"Valor invalido"),
+          isInt:objectValidate(true,"Valor invalido")
+        }
       },
 
       /* DESCRIPTION */
       description: {
-        type: DataTypes.INTEGER,
+        type: DataTypes.TEXT,
         allowNull: false,
+        validate:{
+          ...defaultValidationsRequiredFields,
+          len:objectValidate([20],"Longitud minima 20 caracteres")
+        }
       },
 
       /* CATEGORY ID */
       categoryId: {
         type: DataTypes.INTEGER,
         allowNull: false,
+        validate:{
+          ...defaultValidationsRequiredFields,
+          isInt:objectValidate(true,"Valor invalido")
+        }
       },
     },
     {

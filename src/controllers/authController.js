@@ -2,8 +2,8 @@ const { ROL_USER } = require("../constants");
 const db = require("../database/models");
 const { sign } = require("jsonwebtoken");
 const { compare } = require("bcryptjs");
-const { literal } = require("sequelize");
 const { sendJsonError } = require("../helpers/sendJsonError");
+const { literalQueryUrlImage } = require("../helpers/literalQueryUrlImage");
 
 module.exports = {
   /* REGISTER CONTROLLER */
@@ -137,7 +137,7 @@ module.exports = {
         }],
         attributes: {
           exclude:['deletedAt','password'],
-          include: [[literal(`CONCAT( '${req.protocol}://${req.get("host")}/users/image/',avatar )`),'avatar']]
+          include: [literalQueryUrlImage(req, "avatar", "avatar", "/users")]
         }
       }
       const {id} = req.userToken /* { id:1 ,rolId:2 } */
