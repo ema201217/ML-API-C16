@@ -3,7 +3,7 @@ const express = require("express");
 const router = express.Router();
 
 // ************ Middlewares Require ************
-const { uploadImageProduct } = require("../middlewares");
+const { uploadImageProduct, checkToken, checkRol } = require("../middlewares");
 
 
 // ************ Controller Require ************
@@ -37,13 +37,13 @@ router
 .get("/:id", detail)
 
 /*** STORAGE PRODUCT ***/
-.post("/", uploadImageProduct.array("images"), store)
+.post("/", uploadImageProduct.array("images"),checkToken,checkRol, store)
 /* 
  *//*** UPDATE PRODUCT ***/
-.patch("/:id", uploadImageProduct.array("images"), update)
+.patch("/:id", uploadImageProduct.array("images"),checkToken,checkRol, update)
 
 /*** DELETE PRODUCT ***/
-.delete("/:id", destroy)
+.delete("/:id",checkToken,checkRol, destroy)
 
 /*** PREVIEW IMAGE ***/
 .get("/image/:img", image)

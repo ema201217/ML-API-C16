@@ -1,5 +1,5 @@
-"use strict";
 const { Model } = require("sequelize");
+"use strict";
 const {join} = require("path");
 const { defaultValidationsRequiredFields, objectValidate } = require("../resource");
 const { unlinkSync } = require("fs");
@@ -54,5 +54,6 @@ module.exports = (sequelize, DataTypes) => {
       }
     }
   );
+  
   return Image;
 };

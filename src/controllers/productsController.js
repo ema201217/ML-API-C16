@@ -1,3 +1,4 @@
+const { unlinkSync } = require("fs");
 const path = require("path");
 const { literal, Op } = require("sequelize");
 const db = require("../database/models");
@@ -280,11 +281,11 @@ const controller = {
         categoryId: +categoryId,
       });
 
-/*       await db.Product.afterCreate(product => {
+      /*       await db.Product.afterCreate(product => {
         console.log(product)
       }) */
 
-      let images = [{ productId: product.id}];
+      let images = [{ productId: product.id }];
 
       if (req.files?.length) {
         images = req.files.map((file) => {
@@ -295,14 +296,29 @@ const controller = {
         });
       }
 
-      await db.Image.bulkCreate(images,{validate:true});
+      await db.Image.bulkCreate(images, { validate: true });
 
-      const productReload = await product.reload({include:['images','category']})
+      await product.reload({
+        include: [
+          {
+            association: "images",
+            attributes: {
+              exclude: ["createdAt", "updatedAt", "deletedAt"],
+            },
+          },
+          {
+            association: "category",
+            attributes: {
+              exclude: ["createdAt", "updatedAt", "deletedAt"],
+            },
+          },
+        ],
+      });
 
       return res.status(201).json({
         ok: true,
         status: 201,
-        data: productReload,
+        data: product,
       });
     } catch (error) {
       sendJsonError(error, res);
@@ -310,10 +326,109 @@ const controller = {
   },
 
   // API -> UPDATE PRODUCT
-  update: (req, res) => {},
+  update: async (req, res) => {
+    const { name, price, discount, description, categoryId } = req.body;
+    const { id } = req.params; /* id product */
+    const { deletePreviousImages } = req.query;
+    try {
+      const product = await db.Product.findByPk(id, {
+        include: [
+          {
+            association: "images",
+            attributes: {
+              exclude: ["createdAt", "updatedAt", "deletedAt"],
+            },
+          },
+          {
+            association: "category",
+            attributes: {
+              exclude: ["createdAt", "updatedAt", "deletedAt"],
+            },
+          },
+        ],
+      });
+
+      product.name = name?.trim() || product.name;
+      product.price = +price || product.price;
+      product.discount = +discount || product.discount;
+      product.description = description?.trim() || product.description;
+      product.categoryId = +categoryId || product.categoryId;
+
+      await product.save();
+
+      if (+deletePreviousImages === 1) {
+        product.images.forEach(async (img) => {
+          await img.destroy();
+          unlinkSync(
+            path.join(__dirname, `../../public/images/products/${img.file}`)
+          );
+        });
+      }
+
+      if (req.files?.length) {
+        const images = req.files.map((file) => {
+          return {
+            file: file.filename,
+            productId: product.id,
+          };
+        });
+
+        await db.Image.bulkCreate(images);
+      }
+
+      res.status(200).json({
+        ok: true,
+        status: 200,
+        /* data: await product.reload() */
+        url: `${req.protocol}://${req.get("host")}/products/${product.id}`,
+      });
+    } catch (error) {
+      sendJsonError(error, res);
+    }
+  },
 
   // API -> DELETE PRODUCT
-  destroy: (req, res) => {},
+  destroy: async (req, res) => {
+    const { id } = req.params; /* product id */
+    try {
+     /*  await db.Image.destroy({ where: { productId: id } });
+      await db.Product.destroy({ where: { id } }); */
+      const options = {
+        include: [
+          {
+            association: "images",
+            attributes: {
+              exclude: ["createdAt", "updatedAt", "deletedAt"],
+            },
+          },
+          {
+            association: "category",
+            attributes: {
+              exclude: ["createdAt", "updatedAt", "deletedAt"],
+            },
+          },
+        ],
+      }
+      const product = await db.Product.findByPk(id,options );
+
+      
+      product.images.forEach(async (img) => {
+        await img.destroy();
+        unlinkSync(
+          path.join(__dirname, `../../public/images/products/${img.file}`)
+          );
+        });
+        await product.destroy()
+        
+      res.status(200).json({
+        ok:true,
+        status:200,
+        msg:'Producto eliminado'
+      })
+    } catch (error) {
+      sendJsonError(error, res);
+    }
+  },
 };
 
 module.exports = controller;
